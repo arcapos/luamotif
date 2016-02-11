@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2015, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
+ * Copyright (c) 2009 - 2016, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -469,7 +469,11 @@ lm_GetValues(lua_State *L)
 		case LUA_TNUMBER:
 			XtSetArg(args[0], (String)arg, &card);
 			XtGetValues(widget, args, 1);
+#if LUA_VERSION_NUM >= 503
+			lua_pushinteger(L, card);
+#else
 			lua_pushnumber(L, card);
+#endif
 			narg++;
 			break;
 		case LUA_TSTRING:
@@ -928,14 +932,14 @@ get_type(const char *string)
 static void
 lm_set_info(lua_State *L) {
 	lua_pushliteral(L, "_COPYRIGHT");
-	lua_pushliteral(L, "Copyright (C) 2009 - 2015 micro systems "
+	lua_pushliteral(L, "Copyright (C) 2009 - 2016 micro systems "
 	    "marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");
 	lua_pushliteral(L, "Motif binding for Lua");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "Motif 1.1.4");
+	lua_pushliteral(L, "Motif 1.1.5");
 	lua_settable(L, -3);
 }
 
@@ -1002,8 +1006,13 @@ lm_newindex(lua_State *L)
 			break;
 		case LUA_TNUMBER:
 			nm = strdup(nam);
+#if LUA_VERSION_NUM >= 503
+			XtSetArg(args[narg], nm, (XtArgVal)
+			    lua_tointeger(L, -1));
+#else
 			XtSetArg(args[narg], nm, (XtArgVal)
 			    (int)lua_tonumber(L, -1));
+#endif
 			narg++;
 			break;
 		case LUA_TBOOLEAN:
@@ -1127,8 +1136,13 @@ lm_CreateWidgetHierarchy(lua_State *L, int parentObj, Widget parent,
 				break;
 			case LUA_TNUMBER:
 				nm = strdup(nam);
+#if LUA_VERSION_NUM >= 503
+				XtSetArg(args[narg], nm, (XtArgVal)
+				    lua_tointeger(L, -1));
+#else
 				XtSetArg(args[narg], nm, (XtArgVal)
 				    (int)lua_tonumber(L, -1));
+#endif
 				narg++;
 				break;
 			case LUA_TBOOLEAN:
