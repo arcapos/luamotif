@@ -1,4 +1,4 @@
-require "motif"
+local motif = require 'motif'
 
 function popup(button)
 	local dialog = button:CreateInformationDialog("info")
@@ -8,12 +8,12 @@ function popup(button)
 		print('OK was pressed')
 	end
 
-	Realize(button:XtParent(), dialog)
+	motif.Realize(button:XtParent(), dialog)
 
-	dialog:XtParent():Popup(GrabNone)
+	dialog:XtParent():Popup(motif.GrabNone)
 end
 
-SetLanguageProc(nil, nil, nil)
+motif.SetLanguageProc(nil, nil, nil)
 
 resources = {
 	'*fontList: variable',
@@ -23,7 +23,7 @@ resources = {
 	'*renderTable.variable.fontType: FONT_IS_XFT',
 
 	--  Color definitions
-	
+
 	'*foreground: #000000',
 	'*background: #c1c1c1',
 	'*XmList.background: #999999',
@@ -46,18 +46,18 @@ resources = {
 	'*form*textLabel*background: #999999'
 }
 
-app, toplevel = Initialize("Demos", resources)
+app, toplevel = motif.Initialize("Demos", resources)
 
-rc = RowColumn {
-	PushButton {
+rc = motif.RowColumn {
+	motif.PushButton {
 		labelString = "Hello",
 		activateCallback = popup
 	},
-	PushButton {
+	motif.PushButton {
 		labelString = "Goodbye",
 		activateCallback = function () app:SetExitFlag() end
 	}
 }
 
-Realize(toplevel, rc)
+motif.Realize(toplevel, rc)
 app:MainLoop()

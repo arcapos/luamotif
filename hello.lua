@@ -1,14 +1,14 @@
-require "motif"
+local motif = require 'motif'
 
-button = PushButton {
+button = motif.PushButton {
 	labelString = "Push here to say hello",
 	activateCallback = function ()
 		print("Hello yourself!")
 	end
 }
 
-SetLanguageProc(nil, nil, nil)
-app, toplevel = Initialize("XLua")
+motif.SetLanguageProc(nil, nil, nil)
+app, toplevel = motif.Initialize("XLua")
 
-Realize(toplevel, button)
+motif.Realize(toplevel, button)
 app:MainLoop()
