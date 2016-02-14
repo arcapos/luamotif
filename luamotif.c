@@ -423,6 +423,9 @@ lm_getArgs(lua_State *L, int start, Arg **args)
 		case LUA_TNIL:
 			break;
 		case LUA_TBOOLEAN:
+			XtSetArg((*args)[narg], (String)arg, (XtArgVal)
+			    (int)lua_toboolean(L, n));
+			narg++;
 			break;
 		case LUA_TTABLE:
 			break;
@@ -939,16 +942,16 @@ lm_set_info(lua_State *L) {
 	lua_pushliteral(L, "Motif binding for Lua");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "Motif 1.1.5");
+	lua_pushliteral(L, "Motif 1.2.0");
 	lua_settable(L, -3);
 }
 
 static void
-register_global(lua_State *L, struct luaL_Reg *reg)
+lm_register(lua_State *L, struct luaL_Reg *reg)
 {
 	while (reg->name != NULL) {
 		lua_pushcfunction(L, reg->func);
-		lua_setglobal(L, reg->name);
+		lua_setfield(L, -2, reg->name);
 		reg++;
 	}
 }
@@ -1043,10 +1046,6 @@ lm_newindex(lua_State *L)
 				free(args[n].name);
 		}
 	}
-#if 0
-	else
-		printf("newindex on non-widget\n");
-#endif
 	return 0;
 }
 
@@ -1324,6 +1323,13 @@ luaopen_motif(lua_State *L)
 	int n;
 
 	struct luaL_Reg luamotif[] = {
+		{ "AddInput",			lm_AddInput },
+		{ "Realize",			lm_Realize },
+		{ "Unrealize",			lm_Unrealize },
+		{ "Initialize",			lm_Initialize },
+		{ "RemoveInput",		lm_RemoveInput },
+		{ "RemoveTimeOut",		lm_RemoveTimeOut },
+		{ "SetLanguageProc",		lm_XtSetLanguageProc },
 		{ NULL, NULL }
 	};
 	struct luaL_Reg luaapp[] = {
@@ -1333,6 +1339,9 @@ luaopen_motif(lua_State *L)
 		{ "CreateInformationDialog",	lm_CreateInformationDialog },
 		{ "CreateFileSelectionDialog",	lm_CreateFileSelectionDialog },
 		{ "CreateFormDialog",		lm_CreateFormDialog },
+		{ "FileSelectionBoxGetChild",	lm_XmFileSelectionBoxGetChild },
+		{ "FileSelectionDoSearch",	lm_XmFileSelectionDoSearch },
+		{ "MessageBoxGetChild",		lm_XmMessageBoxGetChild },
 
 		/* Managing, Xt */
 		{ "SetSensitive",		lm_SetSensitive },
@@ -1368,16 +1377,6 @@ luaopen_motif(lua_State *L)
 		{ "SetSelection",		lm_SetSelection },
 		{ NULL,				NULL }
 	};
-	struct luaL_Reg luaXt[] = {
-		{ "AddInput",			lm_AddInput },
-		{ "Realize",			lm_Realize },
-		{ "Unrealize",			lm_Unrealize },
-		{ "Initialize",			lm_Initialize },
-		{ "RemoveInput",		lm_RemoveInput },
-		{ "RemoveTimeOut",		lm_RemoveTimeOut },
-		{ "SetLanguageProc",		lm_XtSetLanguageProc },
-		{ NULL,				NULL }
-	};
 	struct luaL_Reg luaXtApp[] = {
 		{ "AddInput",			lm_AddInput },
 		{ "AddTimeOut",			lm_AddTimeOut },
@@ -1392,17 +1391,16 @@ luaopen_motif(lua_State *L)
 	luaL_register(L, "motif", luamotif);
 #endif
 	lm_set_info(L);
-	register_global(L, luaXt);
-	register_global(L, lm_widgetConstructors);
-	register_global(L, lm_gadgetConstructors);
+	lm_register(L, lm_widgetConstructors);
+	lm_register(L, lm_gadgetConstructors);
 
 	for (n = 0; n < num_motif_strings(); n++) {
 		lua_pushstring(L, motif_strings[n].value);
-		lua_setglobal(L, motif_strings[n].name);
+		lua_setfield(L, -2, motif_strings[n].name);
 	};
 	for (n = 0; n < num_motif_ints(); n++) {
 		lua_pushinteger(L, motif_ints[n].value);
-		lua_setglobal(L, motif_ints[n].name);
+		lua_setfield(L, -2, motif_ints[n].name);
 	};
 
 	/* The Widget metatable */
