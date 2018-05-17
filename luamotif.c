@@ -183,6 +183,22 @@ lm_XmMessageBoxGetChild(lua_State *L)
 	return 1;
 }
 
+/* XmList */
+static int
+lm_XmListAddItem(lua_State *L)
+{
+	Widget list;
+	char *text;
+	XmString item;
+
+	list = lm_GetWidget(L, 1);
+	text = (char *)luaL_checkstring(L, 2);
+	item = XmStringCreateLocalized(text);
+	XmListAddItem(list, item, luaL_checkinteger(L, 3));
+	XmStringFree(item);
+	return 0;
+}
+
 static int
 lm_ProcessTraversal(lua_State *L)
 {
@@ -519,6 +535,21 @@ lm_SetValues(lua_State *L)
 	narg = lm_getArgs(L, 2, &args);
 	XtSetValues(widget, args, narg);
 	free(args);
+	return 0;
+}
+
+static int
+lm_SetStringValue(lua_State *L)
+{
+	Widget widget;
+	size_t len;
+	const char *name, *value;
+
+	name = luaL_checkstring(L, 2);
+	value = luaL_checklstring(L, 3, &len);
+	widget = lm_GetWidget(L, 1);
+	XtVaSetValues(widget, XtVaTypedArg, name, XmRString, value, len + 1,
+	    NULL);
 	return 0;
 }
 
@@ -1106,6 +1137,13 @@ lm_CreateWidgetHierarchy(lua_State *L, int parentObj, Widget parent,
 				strlcpy(nam, name, sizeof nam);
 			}
 
+			/* Processed after widget creation */
+			if (!strcmp(nam, "background") ||
+			    !strcmp(nam, "foreground")) {
+				lua_pop(L, 1);
+				continue;
+			}
+
 			switch (lua_type(L, -1)) {
 			case LUA_TSTRING:
 				utf8_s = (char *)lua_tostring(L, -1);
@@ -1184,6 +1222,17 @@ lm_CreateWidgetHierarchy(lua_State *L, int parentObj, Widget parent,
 		}
 
 		switch (lua_type(L, -1)) {
+		case LUA_TSTRING:
+			if (widget && (!strcmp(nam, "background") ||
+			    !strcmp(nam, "foreground"))) {
+				size_t len;
+				const char *color;
+
+				color = luaL_checklstring(L, -1, &len);
+				XtVaSetValues(widget, XtVaTypedArg, nam,
+					XmRString, color, len + 1, NULL);
+			}
+			break;
 		case LUA_TTABLE:
 			if (widget == NULL)
 				lm_CreateWidgetHierarchy(L, t, parent, nam);
@@ -1317,6 +1366,45 @@ lm_Unrealize(lua_State *L)
 	return 0;
 }
 
+static int
+lm_GetPixmap(lua_State *L)
+{
+	Widget w, toplevel;
+	Pixmap pixmap;
+
+	w = lm_GetWidget(L, 1);
+	toplevel = lm_GetWidget(L, 2);
+
+	XtVaGetValues(w, XmNlabelPixmap, &pixmap, NULL);
+	if (pixmap != XmUNSPECIFIED_PIXMAP)
+		XmDestroyPixmap(XtScreen(toplevel), pixmap);
+
+	pixmap = XmGetPixmap(XtScreen(toplevel), (char *)luaL_checkstring(L, 3),
+	    XmUNSPECIFIED_PIXEL, XmUNSPECIFIED_PIXEL);
+
+	XtVaSetValues(w, XmNlabelPixmap, pixmap, NULL);
+
+	return 0;
+}
+
+static int
+lm_DestroyPixmap(lua_State *L)
+{
+	Widget w, toplevel;
+	Pixmap pixmap;
+
+	w = lm_GetWidget(L, 1);
+	toplevel = lm_GetWidget(L, 2);
+
+	XtVaGetValues(w, XmNlabelPixmap, &pixmap, NULL);
+	if (pixmap != XmUNSPECIFIED_PIXMAP) {
+		XmDestroyPixmap(XtScreen(toplevel), pixmap);
+		XtVaSetValues(w, XmNlabelPixmap, XmUNSPECIFIED_PIXMAP, NULL);
+	}
+
+	return 0;
+}
+
 int
 luaopen_motif(lua_State *L)
 {
@@ -1343,6 +1431,12 @@ luaopen_motif(lua_State *L)
 		{ "FileSelectionDoSearch",	lm_XmFileSelectionDoSearch },
 		{ "MessageBoxGetChild",		lm_XmMessageBoxGetChild },
 
+		{ "GetPixmap",			lm_GetPixmap },
+		{ "DestroyPixmap",		lm_DestroyPixmap },
+
+		/* Lists */
+		{ "ListAddItem",		lm_XmListAddItem },
+
 		/* Managing, Xt */
 		{ "SetSensitive",		lm_SetSensitive },
 		{ "ManageChild",		lm_ManageChild },
@@ -1360,6 +1454,7 @@ luaopen_motif(lua_State *L)
 		{ "Destroy",			lm_DestroyWidgetHierarchy },
 		{ "GetValues",			lm_GetValues },
 		{ "SetValues",			lm_SetValues },
+		{ "SetStringValue",		lm_SetStringValue },
 		{ "SetKeyboardFocus",		lm_SetKeyboardFocus },
 		{ "SetWorkWindow",		lm_SetWorkWindow },
 		{ "ScrollVisible",		lm_ScrollVisible },
