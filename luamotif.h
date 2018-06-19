@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2012, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
+ * Copyright (c) 2009 - 2018, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *     * Neither the name of Micro Systems Marc Balmer nor the
  *       names of its contributors may be used to endorse or promote products
  *       derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -32,6 +32,22 @@
 
 #define WIDGET_METATABLE "Motif widget functions"
 #define CONTEXT_METATABLE "Xt application context"
+
+typedef enum {
+	NONE = 0,
+	FUNCTION,
+	UCHAR,
+	BOOLEAN,
+	DIMENSION,
+	CARDINAL,
+	POSITION,
+	XTARGVAL,
+	STRING
+} x11_types;
+
+#define X11_DIMENSION	0
+#define X11_CARDINAL	1
+#define X11_POSITION	2
 
 typedef struct cb_data {
 	lua_State *L;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2016, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
+ * Copyright (c) 2009 - 2018, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -472,7 +472,12 @@ lm_GetValues(lua_State *L)
 	int narg, n, nn, type;
 	const char *arg;
 	char *value;
-	Cardinal card;
+	Boolean boolean;
+	unsigned char uchar;
+	Cardinal cardinal;
+	Dimension dimension;
+	Position position;
+	int v;
 	XmString text;
 
 	widget = lm_GetWidget(L, 1);
@@ -485,37 +490,44 @@ lm_GetValues(lua_State *L)
 		arg = lua_tostring(L, n);
 		type = get_type(arg);
 		switch (type) {
-		case LUA_TNUMBER:
-			XtSetArg(args[0], (String)arg, &card);
+		case BOOLEAN:
+			XtSetArg(args[0], (String)arg, &boolean);
 			XtGetValues(widget, args, 1);
-#if LUA_VERSION_NUM >= 503
-			lua_pushinteger(L, card);
-#else
-			lua_pushnumber(L, card);
-#endif
+			lua_pushboolean(L, boolean);
 			narg++;
 			break;
-		case LUA_TSTRING:
+		case UCHAR:
+			XtSetArg(args[0], (String)arg, &uchar);
+			XtGetValues(widget, args, 1);
+			lua_pushinteger(L, uchar);
+			narg++;
+			break;
+		case CARDINAL:
+			XtSetArg(args[0], (String)arg, &cardinal);
+			XtGetValues(widget, args, 1);
+			lua_pushinteger(L, cardinal);
+			narg++;
+			break;
+		case DIMENSION:
+			XtSetArg(args[0], (String)arg, &dimension);
+			XtGetValues(widget, args, 1);
+			lua_pushinteger(L, dimension);
+			narg++;
+			break;
+		case POSITION:
+			XtSetArg(args[0], (String)arg, &position);
+			XtGetValues(widget, args, 1);
+			lua_pushinteger(L, position);
+			narg++;
+			break;
+
+		case STRING:
 			XtSetArg(args[0], (String)arg, &text);
 			XtGetValues(widget, args, 1);
 			XmStringGetLtoR(text, XmFONTLIST_DEFAULT_TAG, &value);
 			lua_pushstring(L, value);
 			XmStringFree(text);
 			narg++;
-			break;
-		case LUA_TFUNCTION:
-			break;
-		case LUA_TNIL:
-			break;
-		case LUA_TBOOLEAN:
-			break;
-		case LUA_TTABLE:
-			break;
-		case LUA_TUSERDATA:
-			break;
-		case LUA_TTHREAD:
-			break;
-		case LUA_TLIGHTUSERDATA:
 			break;
 		default:
 			break;
@@ -966,14 +978,14 @@ get_type(const char *string)
 static void
 lm_set_info(lua_State *L) {
 	lua_pushliteral(L, "_COPYRIGHT");
-	lua_pushliteral(L, "Copyright (C) 2009 - 2016 micro systems "
+	lua_pushliteral(L, "Copyright (C) 2009 - 2018 micro systems "
 	    "marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");
 	lua_pushliteral(L, "Motif binding for Lua");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "Motif 1.2.0");
+	lua_pushliteral(L, "Motif 1.3.0");
 	lua_settable(L, -3);
 }
 
@@ -1040,13 +1052,8 @@ lm_newindex(lua_State *L)
 			break;
 		case LUA_TNUMBER:
 			nm = strdup(nam);
-#if LUA_VERSION_NUM >= 503
 			XtSetArg(args[narg], nm, (XtArgVal)
 			    lua_tointeger(L, -1));
-#else
-			XtSetArg(args[narg], nm, (XtArgVal)
-			    (int)lua_tonumber(L, -1));
-#endif
 			narg++;
 			break;
 		case LUA_TBOOLEAN:
@@ -1480,11 +1487,7 @@ luaopen_motif(lua_State *L)
 		{ "ProcessEvent",		lm_ProcessEvent },
 		{ NULL,				NULL }
 	};
-#if LUA_VERSION_NUM >= 502
 	luaL_newlib(L, luamotif);
-#else
-	luaL_register(L, "motif", luamotif);
-#endif
 	lm_set_info(L);
 	lm_register(L, lm_widgetConstructors);
 	lm_register(L, lm_gadgetConstructors);
@@ -1500,11 +1503,7 @@ luaopen_motif(lua_State *L)
 
 	/* The Widget metatable */
 	if (luaL_newmetatable(L, WIDGET_METATABLE)) {
-#if LUA_VERSION_NUM >= 502
 		luaL_setfuncs(L, luaapp, 0);
-#else
-		luaL_register(L, NULL, luaapp);
-#endif
 		lua_pushliteral(L, "__metatable");
 		lua_pushliteral(L, "must not access this metatable");
 		lua_settable(L, -3);
@@ -1513,11 +1512,7 @@ luaopen_motif(lua_State *L)
 
 	/* The Xt application context metatable */
 	if (luaL_newmetatable(L, CONTEXT_METATABLE)) {
-#if LUA_VERSION_NUM >= 502
 		luaL_setfuncs(L, luaXtApp, 0);
-#else
-		luaL_register(L, NULL, luaXtApp);
-#endif
 		lua_pushliteral(L, "__index");
 		lua_pushvalue(L, -2);
 		lua_settable(L, -3);
