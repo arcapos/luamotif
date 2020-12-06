@@ -1,11 +1,22 @@
 SRCS=		luamotif.c widgets.c constants.c
 LIB=		motif
 
-LUAVER=		`lua -v 2>&1 | cut -c 5-7`
+LUA=		$(shell lua${SUFFIX} -v 2>&1 | cut -d ' ' -f 1)
+LUAIMPLVER=	$(shell lua${SUFFIX} -v 2>&1 | cut -d ' ' -f 2 | cut -c 1-3)
+
+ifeq (${LUA},LuaJIT)
+  LUAVER=	5.1
+  LUAINCVER=	-${LUAIMPLVER}
+  LUALIBVER=	-${LUAVER}
+else
+  LUAVER=	${LUAIMPLVER}
+  LUAINCVER=	${LUAVER}
+  LUALIBVER=	${LUAVER}
+endif
 
 CFLAGS+=	-Wall -O3 -fPIC -I/usr/include -I${PKGDIR}/include \
-		-I/usr/include/lua${LUAVER}
-LDADD+=		-L${XDIR}/lib -L${PKGDIR}/lib -lXm -lXt -lX11 -lbsd
+		-I/usr/include/lua${SUFFIX}${LUAINCVER}
+LDADD+=		-L${XDIR}/lib -L${PKGDIR}/lib -llua${SUFFIX}${LUALIBVER} -lXm -lXt -lX11 -lbsd
 
 PKGDIR=		/usr
 LIBDIR=		${PKGDIR}/lib
