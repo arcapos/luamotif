@@ -1475,7 +1475,6 @@ luaopen_motif(lua_State *L)
 		{ "GetInsertionPosition",	lm_GetInsertionPosition },
 		{ "GetLastPosition",		lm_GetLastPosition },
 		{ "SetInsertionPosition",	lm_SetInsertionPosition },
-		{ "SetMaxLenght",		lm_SetMaxLength }, /* leaving typoed version of SetMaxLength for backwards compat */
 		{ "SetMaxLength",		lm_SetMaxLength },
 		{ "SetSelection",		lm_SetSelection },
 		{ NULL,				NULL }
