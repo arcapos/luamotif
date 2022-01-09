@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2018, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
+ * Copyright (c) 2009 - 2022, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -978,14 +978,14 @@ get_type(const char *string)
 static void
 lm_set_info(lua_State *L) {
 	lua_pushliteral(L, "_COPYRIGHT");
-	lua_pushliteral(L, "Copyright (C) 2009 - 2018 micro systems "
+	lua_pushliteral(L, "Copyright (C) 2009 - 2022 micro systems "
 	    "marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");
 	lua_pushliteral(L, "Motif binding for Lua");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "Motif 1.3.0");
+	lua_pushliteral(L, "Motif 1.4.0");
 	lua_settable(L, -3);
 }
 
