@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2022, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
+ * Copyright (c) 2009 - 2024, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -165,7 +165,6 @@ lm_XmFileSelectionDoSearch(lua_State *L)
 	XmFileSelectionDoSearch(widget, str);
 	return 0;
 }
-
 
 static int
 lm_XmMessageBoxGetChild(lua_State *L)
@@ -477,7 +476,6 @@ lm_GetValues(lua_State *L)
 	Cardinal cardinal;
 	Dimension dimension;
 	Position position;
-	int v;
 	XmString text;
 
 	widget = lm_GetWidget(L, 1);
@@ -978,7 +976,7 @@ get_type(const char *string)
 static void
 lm_set_info(lua_State *L) {
 	lua_pushliteral(L, "_COPYRIGHT");
-	lua_pushliteral(L, "Copyright (C) 2009 - 2022 micro systems "
+	lua_pushliteral(L, "Copyright (C) 2009 - 2024 micro systems "
 	    "marc balmer");
 	lua_settable(L, -3);
 	lua_pushliteral(L, "_DESCRIPTION");
@@ -1105,21 +1103,10 @@ lm_CreateWidgetHierarchy(lua_State *L, int parentObj, Widget parent,
 	WidgetClass class;
 	Widget widget;
 	XmString s;
-#if 0
-	iconv_t cd;
-#endif
 	struct cb_data *cbd;
-#if 0
-	int data = -1;
-	size_t len, inbytesleft, outbytesleft;
-#endif
 	char nam[64], *nm;
 	int n, narg, t;
 	char *utf8_s;
-#if 0
-	char *utf8_s, *iso_s;
-	char *inbuf, *outbuf;
-#endif
 	widget = NULL;
 	narg = 0;
 
@@ -1154,20 +1141,6 @@ lm_CreateWidgetHierarchy(lua_State *L, int parentObj, Widget parent,
 			switch (lua_type(L, -1)) {
 			case LUA_TSTRING:
 				utf8_s = (char *)lua_tostring(L, -1);
-#if 0
-				len = strlen(iso_s) * 2 + 1;
-				utf8_s = malloc(len);
-
-				cd = iconv_open("UTF-8", "ISO-8859-1");
-				inbytesleft = strlen(iso_s);
-				outbytesleft = len;
-				inbuf = iso_s;
-				outbuf = utf8_s;
-				bzero(utf8_s, len);
-				iconv(cd, (const char**)&inbuf, &inbytesleft,
-				    &outbuf, &outbytesleft);
-				iconv_close(cd);
-#endif
 				nm = strdup(nam);
 				/* XXX ugly, ugliest... */
 				if (strcmp(nam, "value") &&
@@ -1180,13 +1153,8 @@ lm_CreateWidgetHierarchy(lua_State *L, int parentObj, Widget parent,
 				break;
 			case LUA_TNUMBER:
 				nm = strdup(nam);
-#if LUA_VERSION_NUM >= 503
 				XtSetArg(args[narg], nm, (XtArgVal)
 				    lua_tointeger(L, -1));
-#else
-				XtSetArg(args[narg], nm, (XtArgVal)
-				    (int)lua_tonumber(L, -1));
-#endif
 				narg++;
 				break;
 			case LUA_TBOOLEAN:
@@ -1331,12 +1299,8 @@ lm_Realize(lua_State *L)
 		table = (void *)lua_topointer(L, 2);
 		strlcpy(nam, "toplevel", sizeof nam);
 
-#if LUA_VERSION_NUM >= 502
 		lua_pushglobaltable(L);
 		t = lua_gettop(L);
-#else
-		t = LUA_GLOBALSINDEX;
-#endif
 		lua_pushnil(L);
 		while (lua_next(L, t) != 0) {
 			if (lua_topointer(L, -1) == table) {
@@ -1353,9 +1317,7 @@ lm_Realize(lua_State *L)
 			}
 			lua_pop(L, 1);
 		}
-#if LUA_VERSION_NUM >= 502
 		lua_pop(L, 1);
-#endif
 	}
 	lm_CreateWidgetHierarchy(L, 0, toplevel, nam);
 	XtRealizeWidget(toplevel);
