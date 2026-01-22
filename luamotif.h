@@ -50,6 +50,7 @@ typedef enum {
 #define X11_POSITION	2
 
 typedef struct cb_data {
+	XtAppContext app;
 	lua_State *L;
 	int ref;	/* The function to be called */
 	int obj;	/* The Lua object to pass, usually the widget */

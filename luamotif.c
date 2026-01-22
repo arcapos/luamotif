@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 - 2024, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
+ * Copyright (c) 2009 - 2026, Micro Systems Marc Balmer, CH-5073 Gipf-Oberfrick
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -356,9 +356,11 @@ lm_Callback(Widget widget, XtPointer client_data, XtPointer call_data)
 		nargs++;
 	}
 
-	if (lua_pcall(cbd->L, nargs, 0, 0))
-		luaL_error(cbd->L, "error calling callback function:\n%s",
-		    lua_tostring(cbd->L, -1));
+	if (lua_pcall(cbd->L, nargs, 0, 0)) {
+		XtAppWarningMsg(XtWidgetToApplicationContext(widget),
+		    "Lua error", "callback error", "", lua_tostring(cbd->L, -1),
+		    NULL, 0);
+	}
 }
 
 static void
@@ -388,7 +390,7 @@ lm_AddCallback(lua_State *L)
 	/* XXX maybe leaks memory (e.g. when the widget is destroyed */
 	cbd = malloc(sizeof(struct cb_data));
 	if (cbd == NULL)
-		luaL_error(L, "memory error");
+		return -1;
 
 	cbd->L = L;
 
@@ -867,11 +869,10 @@ lm_Input(XtPointer client_data, int *source, XtInputId *id)
 	lm_callbackdata *cbd = (lm_callbackdata *)client_data;
 
 	lua_rawgeti(cbd->L, LUA_REGISTRYINDEX, cbd->ref);
-	if (lua_pcall(cbd->L, 0, 0, 0))
-		luaL_error(cbd->L, "error calling input function:\n%s",
-		    lua_tostring(cbd->L, -1));
-	/*luaL_unref(cbd->L, LUA_REGISTRYINDEX, cbd->ref);
-	free(cbd);*/
+	if (lua_pcall(cbd->L, 0, 0, 0)) {
+		XtAppWarningMsg(cbd->app, "Lua error", "input error", "",
+		    lua_tostring(cbd->L, -1), NULL, 0);
+	}
 }
 
 static int
@@ -885,6 +886,7 @@ lm_AddInput(lua_State *L)
 	app = luaL_checkudata(L, 1, CONTEXT_METATABLE);
 
 	cbd = malloc(sizeof(lm_callbackdata));
+	cbd->app = *app;
 	cbd->L = L;
 	cbd->ref = luaL_ref(L, LUA_REGISTRYINDEX);
 	fd = luaL_checkinteger(L, -1);
@@ -907,9 +909,10 @@ lm_Interval(XtPointer client_data, XtIntervalId *ignored)
 	lm_callbackdata *cbd = (lm_callbackdata *)client_data;
 
 	lua_rawgeti(cbd->L, LUA_REGISTRYINDEX, cbd->ref);
-	if (lua_pcall(cbd->L, 0, 0, 0))
-		luaL_error(cbd->L, "error calling timeout function:\n%s",
-		    lua_tostring(cbd->L, -1));
+	if (lua_pcall(cbd->L, 0, 0, 0)) {
+		XtAppWarningMsg(cbd->app, "Lua error", "interval error", "",
+		    lua_tostring(cbd->L, -1), NULL, 0);
+	}
 	luaL_unref(cbd->L, LUA_REGISTRYINDEX, cbd->ref);
 	free(cbd);
 }
@@ -925,6 +928,7 @@ lm_AddTimeOut(lua_State *L)
 	app = luaL_checkudata(L, 1, CONTEXT_METATABLE);
 
 	cbd = malloc(sizeof(lm_callbackdata));
+	cbd->app = *app;
 	cbd->L = L;
 	cbd->ref = luaL_ref(L, LUA_REGISTRYINDEX);
 	interval = luaL_checkinteger(L, -1);
@@ -971,20 +975,6 @@ get_type(const char *string)
 	if (constant)
 		type = constant->type;
 	return type;
-}
-
-static void
-lm_set_info(lua_State *L) {
-	lua_pushliteral(L, "_COPYRIGHT");
-	lua_pushliteral(L, "Copyright (C) 2009 - 2024 micro systems "
-	    "marc balmer");
-	lua_settable(L, -3);
-	lua_pushliteral(L, "_DESCRIPTION");
-	lua_pushliteral(L, "Motif binding for Lua");
-	lua_settable(L, -3);
-	lua_pushliteral(L, "_VERSION");
-	lua_pushliteral(L, "Motif 1.4.0");
-	lua_settable(L, -3);
 }
 
 static void
@@ -1450,7 +1440,18 @@ luaopen_motif(lua_State *L)
 		{ NULL,				NULL }
 	};
 	luaL_newlib(L, luamotif);
-	lm_set_info(L);
+
+	lua_pushliteral(L, "_COPYRIGHT");
+	lua_pushliteral(L, "Copyright (C) 2009 - 2026 micro systems "
+	    "marc balmer");
+	lua_settable(L, -3);
+	lua_pushliteral(L, "_DESCRIPTION");
+	lua_pushliteral(L, "Motif binding for Lua");
+	lua_settable(L, -3);
+	lua_pushliteral(L, "_VERSION");
+	lua_pushliteral(L, "Motif 1.5.0");
+	lua_settable(L, -3);
+
 	lm_register(L, lm_widgetConstructors);
 	lm_register(L, lm_gadgetConstructors);
 
